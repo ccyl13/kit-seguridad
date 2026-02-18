@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Copy, CheckCheck, AlertTriangle, CheckCircle, Clock } from "lucide-react";
+import { Copy, CheckCheck, AlertTriangle, CheckCircle, Clock, ShieldAlert, ShieldX } from "lucide-react";
+import { toast } from "sonner";
 
 function base64UrlDecode(str: string): string {
   let s = str.replace(/-/g, "+").replace(/_/g, "/");
@@ -21,10 +22,28 @@ interface JwtPayload {
   [key: string]: unknown;
 }
 
+interface JwtHeader {
+  alg?: string;
+  typ?: string;
+  [key: string]: unknown;
+}
+
+const INSECURE_ALGS = ["none", "None", "NONE"];
+const WEAK_ALGS = ["HS256", "RS256"]; // common but worth flagging if misconfigured
+const STRONG_ALGS = ["HS384", "HS512", "RS384", "RS512", "ES256", "ES384", "ES512", "EdDSA"];
+
+function getAlgSecurity(alg: string | undefined): { level: "critical" | "warn" | "ok" | "unknown"; label: string } {
+  if (!alg) return { level: "unknown", label: "Algoritmo desconocido" };
+  if (INSECURE_ALGS.includes(alg)) return { level: "critical", label: `ALG: ${alg} — SIN FIRMA (CRÍTICO)` };
+  if (STRONG_ALGS.includes(alg)) return { level: "ok", label: `ALG: ${alg} — Seguro` };
+  if (WEAK_ALGS.includes(alg)) return { level: "warn", label: `ALG: ${alg} — Aceptable (verifica la clave)` };
+  return { level: "warn", label: `ALG: ${alg} — Revisar manualmente` };
+}
+
 function parseJwt(token: string) {
   const parts = token.split(".");
   if (parts.length !== 3) throw new Error("Formato JWT inválido (debe tener 3 partes separadas por '.')");
-  const header = JSON.parse(base64UrlDecode(parts[0]));
+  const header = JSON.parse(base64UrlDecode(parts[0])) as JwtHeader;
   const payload = JSON.parse(base64UrlDecode(parts[1])) as JwtPayload;
   const signature = parts[2];
   return { header, payload, signature };
@@ -39,9 +58,18 @@ function getExpStatus(payload: JwtPayload) {
   if (!payload.exp) return null;
   const now = Math.floor(Date.now() / 1000);
   const diff = payload.exp - now;
-  if (diff < 0) return { expired: true, label: `Expirado hace ${Math.abs(Math.round(diff / 60))} min` };
-  if (diff < 300) return { expired: false, warn: true, label: `Expira en ${Math.round(diff / 60)} min ⚠` };
-  return { expired: false, warn: false, label: `Válido — expira en ${Math.round(diff / 3600)}h` };
+
+  const fmt = (secs: number) => {
+    const abs = Math.abs(secs);
+    if (abs < 60) return `${Math.round(abs)}s`;
+    if (abs < 3600) return `${Math.floor(abs / 60)}m ${Math.round(abs % 60)}s`;
+    if (abs < 86400) return `${Math.floor(abs / 3600)}h ${Math.floor((abs % 3600) / 60)}m`;
+    return `${Math.floor(abs / 86400)}d ${Math.floor((abs % 86400) / 3600)}h`;
+  };
+
+  if (diff < 0) return { expired: true, warn: false, label: `TOKEN EXPIRADO hace ${fmt(diff)}` };
+  if (diff < 300) return { expired: false, warn: true, label: `⚠ Expira en ${fmt(diff)} — renovar pronto` };
+  return { expired: false, warn: false, label: `Válido — expira en ${fmt(diff)}` };
 }
 
 function JsonView({ data }: { data: Record<string, unknown> }) {
@@ -63,7 +91,6 @@ export function JwtTool() {
   const [input, setInput] = useState("");
   const [parsed, setParsed] = useState<ReturnType<typeof parseJwt> | null>(null);
   const [error, setError] = useState("");
-  const [copied, setCopied] = useState<string | null>(null);
 
   const parse = () => {
     try {
@@ -75,13 +102,13 @@ export function JwtTool() {
     }
   };
 
-  const copy = (text: string, key: string) => {
+  const copy = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
-    setCopied(key);
-    setTimeout(() => setCopied(null), 2000);
+    toast.success(`${label} copiado`);
   };
 
   const expStatus = parsed ? getExpStatus(parsed.payload) : null;
+  const algSec = parsed ? getAlgSecurity(parsed.header.alg as string | undefined) : null;
 
   return (
     <div className="space-y-3">
@@ -96,13 +123,23 @@ export function JwtTool() {
         />
       </div>
 
-      <button
-        onClick={parse}
-        disabled={!input.trim()}
-        className="w-full py-2 bg-primary text-primary-foreground text-sm font-bold tracking-widest hover:opacity-90 transition-opacity disabled:opacity-50 glow-border-strong"
-      >
-        DECODIFICAR
-      </button>
+      <div className="flex gap-2">
+        <button
+          onClick={parse}
+          disabled={!input.trim()}
+          className="flex-1 py-2 bg-primary text-primary-foreground text-sm font-bold tracking-widest hover:opacity-90 transition-opacity disabled:opacity-50 glow-border-strong"
+        >
+          DECODIFICAR
+        </button>
+        {parsed && (
+          <button
+            onClick={() => { setParsed(null); setInput(""); setError(""); }}
+            className="px-3 py-2 border border-border text-muted-foreground text-xs hover:border-primary/50 hover:text-primary transition-all"
+          >
+            LIMPIAR
+          </button>
+        )}
+      </div>
 
       {error && (
         <div className="border border-destructive/50 bg-destructive/10 p-3 flex gap-2 items-start">
@@ -112,8 +149,24 @@ export function JwtTool() {
       )}
 
       {parsed && (
-        <div className="space-y-2">
-          {/* Status bar */}
+        <div className="space-y-2 animate-fade-in">
+          {/* Algorithm security */}
+          {algSec && (
+            <div className={`flex items-center gap-2 border p-2 text-xs font-mono ${
+              algSec.level === "critical"
+                ? "border-destructive/70 bg-destructive/15 text-destructive"
+                : algSec.level === "warn"
+                  ? "border-yellow-500/50 bg-yellow-500/10 text-yellow-400"
+                  : "border-primary/30 bg-primary/5 text-primary"
+            }`}>
+              {algSec.level === "critical" ? <ShieldX className="w-4 h-4 shrink-0" /> :
+               algSec.level === "warn" ? <ShieldAlert className="w-4 h-4 shrink-0" /> :
+               <CheckCircle className="w-4 h-4 shrink-0" />}
+              {algSec.label}
+            </div>
+          )}
+
+          {/* Expiry status */}
           {expStatus && (
             <div className={`flex items-center gap-2 border p-2 text-xs ${
               expStatus.expired
@@ -136,8 +189,8 @@ export function JwtTool() {
           <div className="terminal-card border border-border p-3">
             <div className="flex justify-between items-center mb-2">
               <span className="text-xs text-primary font-bold">HEADER</span>
-              <button onClick={() => copy(JSON.stringify(parsed.header, null, 2), "header")} className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1">
-                {copied === "header" ? <><CheckCheck className="w-3 h-3" /> OK</> : <><Copy className="w-3 h-3" /> COPIAR</>}
+              <button onClick={() => copy(JSON.stringify(parsed.header, null, 2), "Header")} className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1">
+                <Copy className="w-3 h-3" /> COPIAR
               </button>
             </div>
             <JsonView data={parsed.header} />
@@ -147,8 +200,8 @@ export function JwtTool() {
           <div className="terminal-card border border-border p-3">
             <div className="flex justify-between items-center mb-2">
               <span className="text-xs text-primary font-bold">PAYLOAD</span>
-              <button onClick={() => copy(JSON.stringify(parsed.payload, null, 2), "payload")} className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1">
-                {copied === "payload" ? <><CheckCheck className="w-3 h-3" /> OK</> : <><Copy className="w-3 h-3" /> COPIAR</>}
+              <button onClick={() => copy(JSON.stringify(parsed.payload, null, 2), "Payload")} className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1">
+                <Copy className="w-3 h-3" /> COPIAR
               </button>
             </div>
             <JsonView data={parsed.payload} />
