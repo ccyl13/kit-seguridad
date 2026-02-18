@@ -6,29 +6,31 @@ const ZWJ = "\u200D";   // 1
 const ZWNJ = "\u200C";  // 0
 const ZWS = "\u200B";   // delimiter between chars
 
+// Usar TextEncoder para manejar UTF-8 correctamente (emojis, acentos, etc.)
 function textToBinary(text: string): string {
-  return text.split("").map(char =>
-    char.charCodeAt(0).toString(2).padStart(8, "0")
-  ).join("");
+  const bytes = new TextEncoder().encode(text);
+  return Array.from(bytes).map(b => b.toString(2).padStart(8, "0")).join("");
 }
 
 function binaryToText(binary: string): string {
-  const chars = binary.match(/.{1,8}/g) || [];
-  return chars.map(b => String.fromCharCode(parseInt(b, 2))).join("");
+  const byteStrings = binary.match(/.{1,8}/g) || [];
+  const bytes = new Uint8Array(byteStrings.map(b => parseInt(b, 2)));
+  return new TextDecoder().decode(bytes);
 }
 
 function encode(coverText: string, secretText: string): string {
   const binary = textToBinary(secretText);
   const hidden = binary.split("").map(b => b === "1" ? ZWJ : ZWNJ).join("") + ZWS;
-  // Inject after first character
   if (!coverText) return hidden;
-  return coverText[0] + hidden + coverText.slice(1);
+  // IMPORTANTE: usar [...coverText] para iterar correctamente sobre emojis (surrogates)
+  const chars = [...coverText];
+  return chars[0] + hidden + chars.slice(1).join("");
 }
 
 function decode(stegoText: string): string {
-  const hiddenChars = stegoText.split("").filter(c => c === ZWJ || c === ZWNJ || c === ZWS);
+  // Iterar con [...] para manejar correctamente los emojis
+  const hiddenChars = [...stegoText].filter(c => c === ZWJ || c === ZWNJ || c === ZWS);
   if (hiddenChars.length === 0) return "";
-  // Remove delimiter
   const binaryArr = hiddenChars.filter(c => c !== ZWS);
   const binary = binaryArr.map(c => c === ZWJ ? "1" : "0").join("");
   try { return binaryToText(binary); } catch { return "[Error decodificando]"; }
