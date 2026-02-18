@@ -88,7 +88,7 @@ function EmojiPicker({ onSelect }: { onSelect: (emoji: string) => void }) {
       </button>
 
       {open && (
-        <div className="absolute left-0 top-full mt-1 z-50 w-72 bg-background border border-border shadow-xl">
+        <div className="absolute right-0 top-full mt-1 z-50 w-72 bg-background border border-border shadow-xl">
           {/* Category tabs */}
           <div className="flex overflow-x-auto border-b border-border scrollbar-none">
             {EMOJI_CATEGORIES.map((cat, i) => (
