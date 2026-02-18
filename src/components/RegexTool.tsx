@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Copy } from "lucide-react";
+import { toast } from "sonner";
 
 interface Match {
   start: number;
@@ -52,22 +53,48 @@ function HighlightedText({ text, matches }: { text: string; matches: Match[] }) 
 }
 
 const COMMON_PATTERNS = [
-  { label: "Email", pattern: "[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,}" },
-  { label: "IPv4", pattern: "\\b(?:(?:25[0-5]|2[0-4]\\d|[01]?\\d\\d?)\\.){3}(?:25[0-5]|2[0-4]\\d|[01]?\\d\\d?)\\b" },
-  { label: "URL", pattern: "https?:\\/\\/[\\w\\-._~:/?#[\\]@!$&'()*+,;=%]+" },
-  { label: "JWT", pattern: "eyJ[a-zA-Z0-9_\\-]+\\.eyJ[a-zA-Z0-9_\\-]+\\.[a-zA-Z0-9_\\-]+" },
-  { label: "Hash MD5", pattern: "\\b[a-fA-F0-9]{32}\\b" },
-  { label: "Hash SHA256", pattern: "\\b[a-fA-F0-9]{64}\\b" },
-  { label: "Tarjeta crédito", pattern: "\\b(?:4[0-9]{12}(?:[0-9]{3})?|5[1-5][0-9]{14})\\b" },
-  { label: "Teléfono ES", pattern: "(?:\\+34|0034)?[6789]\\d{8}" },
+  // Red
+  { label: "Email", pattern: "[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,}", category: "RED" },
+  { label: "IPv4", pattern: "\\b(?:(?:25[0-5]|2[0-4]\\d|[01]?\\d\\d?)\\.){3}(?:25[0-5]|2[0-4]\\d|[01]?\\d\\d?)\\b", category: "RED" },
+  { label: "IPv6", pattern: "([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}", category: "RED" },
+  { label: "URL", pattern: "https?:\\/\\/[\\w\\-._~:/?#[\\]@!$&'()*+,;=%]+", category: "RED" },
+  { label: "CIDR", pattern: "\\b(?:\\d{1,3}\\.){3}\\d{1,3}\\/(?:[0-9]|[12]\\d|3[0-2])\\b", category: "RED" },
+  // Auth/Tokens
+  { label: "JWT", pattern: "eyJ[a-zA-Z0-9_\\-]+\\.eyJ[a-zA-Z0-9_\\-]+\\.[a-zA-Z0-9_\\-]+", category: "AUTH" },
+  { label: "Bearer", pattern: "Bearer\\s+[A-Za-z0-9\\-_\\.]+", category: "AUTH" },
+  { label: "API Key", pattern: "(?:api[_-]?key|apikey|access[_-]?token)[\"']?\\s*[:=]\\s*[\"']?([\\w\\-]{16,})", category: "AUTH" },
+  // Hashes
+  { label: "MD5", pattern: "\\b[a-fA-F0-9]{32}\\b", category: "HASH" },
+  { label: "SHA-256", pattern: "\\b[a-fA-F0-9]{64}\\b", category: "HASH" },
+  { label: "SHA-1", pattern: "\\b[a-fA-F0-9]{40}\\b", category: "HASH" },
+  // Ataques
+  { label: "SQL Inject", pattern: "(?:'\\s*(?:OR|AND)\\s*'\\d|UNION\\s+SELECT|DROP\\s+TABLE|--\\s*$|;\\s*--|xp_cmdshell)", category: "ATTACK" },
+  { label: "XSS", pattern: "<\\s*script[^>]*>|javascript\\s*:|on(?:load|click|error|mouseover)\\s*=", category: "ATTACK" },
+  { label: "Path Traversal", pattern: "\\.{2}[\\\\/]|\\.{2}%2[Ff]|%2e%2e[\\\\/]", category: "ATTACK" },
+  { label: "LFI/RFI", pattern: "(?:file|php|data|expect|zip|phar)://", category: "ATTACK" },
+  // PII
+  { label: "Tarjeta crédito", pattern: "\\b(?:4[0-9]{12}(?:[0-9]{3})?|5[1-5][0-9]{14})\\b", category: "PII" },
+  { label: "Teléfono ES", pattern: "(?:\\+34|0034)?[6789]\\d{8}", category: "PII" },
+  { label: "DNI/NIE", pattern: "\\b[0-9]{8}[A-HJ-NP-TV-Z]\\b|\\b[XYZ][0-9]{7}[A-HJ-NP-TV-Z]\\b", category: "PII" },
 ];
+
+const CATEGORIES = ["RED", "AUTH", "HASH", "ATTACK", "PII"];
+
+const CATEGORY_COLORS: Record<string, string> = {
+  RED: "border-blue-500/50 text-blue-400 bg-blue-500/10",
+  AUTH: "border-yellow-500/50 text-yellow-400 bg-yellow-500/10",
+  HASH: "border-purple-500/50 text-purple-400 bg-purple-500/10",
+  ATTACK: "border-destructive/50 text-destructive bg-destructive/10",
+  PII: "border-orange-500/50 text-orange-400 bg-orange-500/10",
+};
 
 export function RegexTool() {
   const [pattern, setPattern] = useState("");
   const [flags, setFlags] = useState("gi");
   const [testText, setTestText] = useState(
-    "Contacta a admin@empresa.com o visita https://ejemplo.com\nIP del servidor: 192.168.1.1\nToken: eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyIn0.abc123"
+    "Contacta a admin@empresa.com o visita https://ejemplo.com\nIP del servidor: 192.168.1.1\nToken: eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyIn0.abc123\n' OR '1'='1' -- inyección SQL\n<script>alert('xss')</script>"
   );
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
   const { matches, error } = useCallback(() => runRegex(pattern, flags, testText), [pattern, flags, testText])();
 
@@ -76,6 +103,16 @@ export function RegexTool() {
   const toggleFlag = (f: string) => {
     setFlags(prev => prev.includes(f) ? prev.replace(f, "") : prev + f);
   };
+
+  const copyMatches = () => {
+    const texts = matches.map(m => testText.slice(m.start, m.end));
+    navigator.clipboard.writeText(texts.join("\n"));
+    toast.success(`${texts.length} coincidencias copiadas`);
+  };
+
+  const filteredPatterns = activeCategory
+    ? COMMON_PATTERNS.filter(p => p.category === activeCategory)
+    : COMMON_PATTERNS;
 
   return (
     <div className="space-y-3">
@@ -87,6 +124,11 @@ export function RegexTool() {
             <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 font-mono">
               {matches.length} coincidencia{matches.length !== 1 ? "s" : ""}
             </span>
+          )}
+          {matches.length > 0 && (
+            <button onClick={copyMatches} className="ml-auto text-xs text-muted-foreground hover:text-primary flex items-center gap-1">
+              <Copy className="w-3 h-3" /> copiar resultados
+            </button>
           )}
         </div>
         <div className="flex border border-border bg-muted focus-within:border-primary transition-colors">
@@ -121,16 +163,38 @@ export function RegexTool() {
             {f}
           </button>
         ))}
-        <span className="text-xs text-muted-foreground ml-2">
-          {flags.includes("g") ? "global" : ""}{flags.includes("i") ? " insensible" : ""}{flags.includes("m") ? " multilinea" : ""}
-        </span>
       </div>
 
-      {/* Common patterns */}
+      {/* Category filter */}
       <div>
-        <div className="text-xs text-muted-foreground mb-1">PATRONES COMUNES</div>
+        <div className="text-xs text-muted-foreground mb-1">CATEGORÍA DE PATRONES</div>
+        <div className="flex flex-wrap gap-1 mb-2">
+          <button
+            onClick={() => setActiveCategory(null)}
+            className={`text-xs px-2 py-1 border transition-all font-mono ${
+              activeCategory === null ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-primary/50"
+            }`}
+          >
+            TODOS
+          </button>
+          {CATEGORIES.map(cat => (
+            <button
+              key={cat}
+              onClick={() => setActiveCategory(activeCategory === cat ? null : cat)}
+              className={`text-xs px-2 py-1 border transition-all font-mono ${
+                activeCategory === cat
+                  ? CATEGORY_COLORS[cat]
+                  : "border-border text-muted-foreground hover:border-primary/50"
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+
+        {/* Common patterns */}
         <div className="flex flex-wrap gap-1">
-          {COMMON_PATTERNS.map(p => (
+          {filteredPatterns.map(p => (
             <button
               key={p.label}
               onClick={() => setPattern(p.pattern)}
