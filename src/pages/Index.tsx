@@ -23,17 +23,17 @@ interface Tool {
 }
 
 const TOOLS: Tool[] = [
-  { id: "jwt", label: "JWT Inspector", icon: Key, desc: "Decodifica y analiza tokens JWT", category: "AUTH" },
-  { id: "hash", label: "Hash Generator", icon: Hash, desc: "SHA-256, SHA-1, CRC-32 + entropía", category: "CRYPTO" },
-  { id: "cipher", label: "Cifrado Clásico", icon: Lock, desc: "César, ROT13, Vigenère", category: "CRYPTO" },
-  { id: "encoder", label: "Codificador", icon: Code2, desc: "Base64, URL, HEX, Binario", category: "ENCODE" },
-  { id: "regex", label: "Regex Lab", icon: Regex, desc: "Testa expresiones regulares con resaltado", category: "ANÁLISIS" },
-  { id: "network", label: "IP / Subnetting", icon: Network, desc: "Calculadora CIDR y análisis de red", category: "RED" },
+  { id: "jwt", label: "Inspector JWT", icon: Key, desc: "Decodifica y analiza tokens JWT", category: "AUTH" },
+  { id: "hash", label: "Generador de Hash", icon: Hash, desc: "SHA-256, SHA-1, CRC-32 + entropía", category: "CRIPTO" },
+  { id: "cipher", label: "Cifrado Clásico", icon: Lock, desc: "César, ROT13, Vigenère", category: "CRIPTO" },
+  { id: "encoder", label: "Codificador", icon: Code2, desc: "Base64, URL, HEX, Binario", category: "CODIFICACIÓN" },
+  { id: "regex", label: "Laboratorio Regex", icon: Regex, desc: "Prueba expresiones regulares con resaltado", category: "ANÁLISIS" },
+  { id: "network", label: "IP / Subredes", icon: Network, desc: "Calculadora CIDR y análisis de red", category: "RED" },
   { id: "stego", label: "Esteganografía", icon: Terminal, desc: "Oculta datos en emojis con ZWJ", category: "STEGO" },
   { id: "password", label: "Contraseñas", icon: Shield, desc: "Analizador de fortaleza y generador", category: "OPSEC" },
 ];
 
-const CATEGORIES = ["AUTH", "CRYPTO", "ENCODE", "ANÁLISIS", "RED", "STEGO", "OPSEC"];
+const CATEGORIES = ["AUTH", "CRIPTO", "CODIFICACIÓN", "ANÁLISIS", "RED", "STEGO", "OPSEC"];
 
 function ToolComponent({ id }: { id: ToolId }) {
   switch (id) {
@@ -70,8 +70,8 @@ export default function Index() {
             <img src="/logo.svg" alt="CyberLab logo" className="w-7 h-7" />
             <span className="text-xs font-semibold text-muted-foreground tracking-widest uppercase">CyberLab</span>
           </div>
-          <h1 className="text-base font-semibold text-foreground leading-tight">Security Toolkit</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">Herramientas de seguridad</p>
+          <h1 className="text-base font-semibold text-foreground leading-tight">Kit de Seguridad</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">Herramientas de análisis</p>
         </div>
 
         {/* Nav */}

@@ -89,7 +89,7 @@ export function CipherTool() {
                   : "border-border text-muted-foreground hover:border-primary/50"
               }`}
             >
-              {d === "encrypt" ? "🔒 ENCRYPT" : "🔓 DECRYPT"}
+              {d === "encrypt" ? "🔒 CIFRAR" : "🔓 DESCIFRAR"}
             </button>
           ))}
         </div>
@@ -98,7 +98,7 @@ export function CipherTool() {
       {/* Params */}
       {mode === "caesar" && (
         <div className="flex items-center gap-3 border border-border bg-muted px-3 py-2">
-          <label className="text-xs text-muted-foreground">SHIFT:</label>
+          <label className="text-xs text-muted-foreground">DESPLAZAMIENTO:</label>
           <input
             type="range" min={1} max={25} value={shift}
             onChange={e => setShift(Number(e.target.value))}
@@ -109,7 +109,7 @@ export function CipherTool() {
       )}
       {mode === "vigenere" && (
         <div>
-          <label className="text-xs text-muted-foreground block mb-1">{">> KEY:"}</label>
+          <label className="text-xs text-muted-foreground block mb-1">{">> CLAVE:"}</label>
           <input
             value={key}
             onChange={e => setKey(e.target.value)}
@@ -126,7 +126,7 @@ export function CipherTool() {
       )}
 
       <div>
-        <label className="text-xs text-muted-foreground block mb-1">{">> INPUT:"}</label>
+        <label className="text-xs text-muted-foreground block mb-1">{">> ENTRADA:"}</label>
         <textarea
           value={input}
           onChange={e => setInput(e.target.value)}
@@ -140,16 +140,16 @@ export function CipherTool() {
         disabled={!input}
         className="w-full py-2 bg-primary text-primary-foreground text-sm font-bold tracking-widest hover:opacity-90 transition-opacity disabled:opacity-50 glow-border-strong"
       >
-        PROCESS {">>"}
+        PROCESAR {">>"}
       </button>
 
       {output && (
         <div className="border border-primary/40 bg-muted p-3 space-y-2">
           <div className="flex justify-between items-center">
             <span className="text-xs text-primary">// OUTPUT:</span>
-            <button onClick={swap} className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1">
-              <ArrowRightLeft className="w-3 h-3" /> SWAP
-            </button>
+              <button onClick={swap} className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1">
+                <ArrowRightLeft className="w-3 h-3" /> INTERCAMBIAR
+              </button>
           </div>
           <div className="text-sm text-foreground break-all">{output}</div>
         </div>
