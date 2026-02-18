@@ -39,9 +39,11 @@ export function StegoTool() {
   const [coverText, setCoverText] = useState("👍👀🔥");
   const [secretText, setSecretText] = useState("");
   const [result, setResult] = useState("");
-  const [stegoInput, setStegoInput] = useState("");
+  const [stegoInput, setStegoInput] = useState("");       // valor real con ZWJ/ZWNJ para decodificar
+  const [displayInput, setDisplayInput] = useState("");   // versión limpia para mostrar en la UI
   const [revealResult, setRevealResult] = useState("");
   const [copied, setCopied] = useState(false);
+  const [hiddenCount, setHiddenCount] = useState(0);
 
   const handleHide = () => {
     if (!secretText) return;
@@ -51,6 +53,16 @@ export function StegoTool() {
   const handleReveal = () => {
     const decoded = decode(stegoInput);
     setRevealResult(decoded || "[No se encontró mensaje oculto]");
+  };
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    e.preventDefault();
+    const raw = e.clipboardData.getData("text/plain");
+    setStegoInput(raw);
+    const invisible = [...raw].filter(c => c === ZWJ || c === ZWNJ || c === ZWS).length;
+    setHiddenCount(invisible);
+    // Mostrar versión limpia (sin caracteres invisibles)
+    setDisplayInput(raw.replace(/[\u200B\u200C\u200D]/g, ""));
   };
 
   const copyToClipboard = (text: string) => {
@@ -137,42 +149,33 @@ export function StegoTool() {
         <div className="space-y-3">
           <div>
             <label className="text-xs text-muted-foreground block mb-1">{">> PASTE SUSPICIOUS TEXT/EMOJIS:"}</label>
-            {/* Textarea oculto con el valor real (con ZWJ) */}
+            {/*
+              Solución limpia: value=displayInput (sin chars invisibles) para evitar ◆◆,
+              pero stegoInput tiene el raw original con ZWJ/ZWNJ para decodificar.
+              onPaste intercepta, guarda el raw, muestra el limpio.
+            */}
             <textarea
-              value={stegoInput}
-              onChange={e => setStegoInput(e.target.value)}
-              className="w-full bg-muted border border-border px-3 py-2 text-foreground text-sm focus:outline-none focus:border-primary transition-colors resize-none h-24 opacity-0 absolute pointer-events-none"
-              aria-hidden
-              tabIndex={-1}
-              readOnly
+              value={displayInput}
+              onChange={e => setDisplayInput(e.target.value)}
+              onPaste={handlePaste}
+              className="w-full bg-muted border border-border px-3 py-2 text-foreground text-sm focus:outline-none focus:border-primary transition-colors resize-none h-24 cyber-scrollbar"
+              placeholder="Pega aquí el texto sospechoso..."
             />
-            {/* Área visible que muestra el texto limpio (sin caracteres invisibles renderizados) */}
-            <div
-              contentEditable
-              suppressContentEditableWarning
-              onPaste={e => {
-                e.preventDefault();
-                const text = e.clipboardData.getData("text/plain");
-                setStegoInput(text);
-                // Mostrar versión visual limpia en el div
-                const el = e.currentTarget;
-                const visible = text.replace(/[\u200B\u200C\u200D]/g, "");
-                el.textContent = visible || "";
-              }}
-              onInput={() => {/* controlled via paste */}}
-              className="w-full bg-muted border border-border px-3 py-2 text-foreground text-sm focus:outline-none focus:border-primary transition-colors min-h-24 h-24 overflow-auto outline-none cyber-scrollbar"
-              data-placeholder="Pega aquí el texto sospechoso..."
-              style={{ whiteSpace: "pre-wrap" }}
-            />
-            {stegoInput && (
+            {hiddenCount > 0 && (
+              <div className="text-xs text-primary mt-1">
+                ✓ {hiddenCount} caracteres invisibles detectados — payload potencial encontrado
+              </div>
+            )}
+            {displayInput && hiddenCount === 0 && (
               <div className="text-xs text-muted-foreground mt-1">
-                {stegoInput.length} chars totales · {[...stegoInput].filter(c => c === "\u200C" || c === "\u200D" || c === "\u200B").length} invisibles detectados
+                Sin caracteres invisibles detectados en este texto
               </div>
             )}
           </div>
           <button
             onClick={handleReveal}
-            className="w-full py-2 bg-primary text-primary-foreground text-sm font-bold tracking-widest hover:opacity-90 transition-opacity glow-border-strong"
+            disabled={!stegoInput}
+            className="w-full py-2 bg-primary text-primary-foreground text-sm font-bold tracking-widest hover:opacity-90 transition-opacity disabled:opacity-50 glow-border-strong"
           >
             ANALYZE & EXTRACT {">>"}
           </button>
