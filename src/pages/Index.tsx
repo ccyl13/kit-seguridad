@@ -1,145 +1,169 @@
-import { useState, useEffect } from "react";
-import { Terminal, Lock, Hash, Code2, Shield, ChevronRight } from "lucide-react";
+import { useState } from "react";
+import {
+  Terminal, Lock, Hash, Code2, Shield,
+  Regex, Network, Key, ChevronRight, Menu, X
+} from "lucide-react";
 import { StegoTool } from "@/components/StegoTool";
 import { HashTool } from "@/components/HashTool";
 import { CipherTool } from "@/components/CipherTool";
 import { EncoderTool } from "@/components/EncoderTool";
 import { PasswordTool } from "@/components/PasswordTool";
+import { JwtTool } from "@/components/JwtTool";
+import { RegexTool } from "@/components/RegexTool";
+import { NetworkTool } from "@/components/NetworkTool";
 
-type ToolId = "stego" | "hash" | "cipher" | "encoder" | "password";
+type ToolId = "stego" | "hash" | "cipher" | "encoder" | "password" | "jwt" | "regex" | "network";
 
-const TOOLS: { id: ToolId; label: string; icon: React.ElementType; desc: string; tag: string }[] = [
-  { id: "stego", label: "ESTEGANOGRAFÍA", icon: Terminal, desc: "Oculta mensajes en emojis con caracteres invisibles", tag: "ZWJ/ZWNJ" },
-  { id: "hash", label: "HASH GENERATOR", icon: Hash, desc: "SHA-256, SHA-1, CRC-32 y análisis de entropía", tag: "CRYPTO" },
-  { id: "cipher", label: "CIFRADO", icon: Lock, desc: "César, ROT13, Vigenère — encripta y desencripta texto", tag: "CIPHER" },
-  { id: "encoder", label: "CODIFICADOR", icon: Code2, desc: "Base64, URL encoding, HEX, binario", tag: "ENCODE" },
-  { id: "password", label: "CONTRASEÑAS", icon: Shield, desc: "Analiza fortaleza y genera contraseñas seguras", tag: "OPSEC" },
+interface Tool {
+  id: ToolId;
+  label: string;
+  icon: React.ElementType;
+  desc: string;
+  category: string;
+}
+
+const TOOLS: Tool[] = [
+  { id: "jwt", label: "JWT Inspector", icon: Key, desc: "Decodifica y analiza tokens JWT", category: "AUTH" },
+  { id: "hash", label: "Hash Generator", icon: Hash, desc: "SHA-256, SHA-1, CRC-32 + entropía", category: "CRYPTO" },
+  { id: "cipher", label: "Cifrado Clásico", icon: Lock, desc: "César, ROT13, Vigenère", category: "CRYPTO" },
+  { id: "encoder", label: "Codificador", icon: Code2, desc: "Base64, URL, HEX, Binario", category: "ENCODE" },
+  { id: "regex", label: "Regex Lab", icon: Regex, desc: "Testa expresiones regulares con resaltado", category: "ANÁLISIS" },
+  { id: "network", label: "IP / Subnetting", icon: Network, desc: "Calculadora CIDR y análisis de red", category: "RED" },
+  { id: "stego", label: "Esteganografía", icon: Terminal, desc: "Oculta datos en emojis con ZWJ", category: "STEGO" },
+  { id: "password", label: "Contraseñas", icon: Shield, desc: "Analizador de fortaleza y generador", category: "OPSEC" },
 ];
 
-function useTypewriter(text: string, speed = 60) {
-  const [displayed, setDisplayed] = useState("");
-  useEffect(() => {
-    setDisplayed("");
-    let i = 0;
-    const timer = setInterval(() => {
-      if (i < text.length) {
-        setDisplayed(text.slice(0, i + 1));
-        i++;
-      } else clearInterval(timer);
-    }, speed);
-    return () => clearInterval(timer);
-  }, [text, speed]);
-  return displayed;
+const CATEGORIES = ["AUTH", "CRYPTO", "ENCODE", "ANÁLISIS", "RED", "STEGO", "OPSEC"];
+
+function ToolComponent({ id }: { id: ToolId }) {
+  switch (id) {
+    case "stego": return <StegoTool />;
+    case "hash": return <HashTool />;
+    case "cipher": return <CipherTool />;
+    case "encoder": return <EncoderTool />;
+    case "password": return <PasswordTool />;
+    case "jwt": return <JwtTool />;
+    case "regex": return <RegexTool />;
+    case "network": return <NetworkTool />;
+  }
 }
 
 export default function Index() {
-  const [activeTool, setActiveTool] = useState<ToolId | null>(null);
-  const [bootDone, setBootDone] = useState(false);
+  const [activeTool, setActiveTool] = useState<ToolId>("jwt");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const title = useTypewriter("CYBER_TOOLKIT v1.0", 80);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setBootDone(true), 1800);
-    return () => clearTimeout(timer);
-  }, []);
-
-  const active = TOOLS.find(t => t.id === activeTool);
+  const active = TOOLS.find(t => t.id === activeTool)!;
+  const ActiveIcon = active.icon;
 
   return (
-    <div className="min-h-screen bg-background text-foreground p-4 md:p-8 max-w-4xl mx-auto">
-      {/* Header */}
-      <header className="mb-8">
-        <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4 font-mono">
-          <span className="text-primary">●</span>
-          <span>root@cyberlab:~$</span>
-          <span className="animate-pulse">_</span>
+    <div className="flex h-screen bg-background text-foreground overflow-hidden">
+      {/* Sidebar */}
+      <aside className={`
+        fixed inset-y-0 left-0 z-50 w-64 bg-card border-r border-border flex flex-col
+        transition-transform duration-200
+        md:relative md:translate-x-0
+        ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
+      `}>
+        {/* Logo */}
+        <div className="px-4 py-4 border-b border-border">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-2 h-2 bg-primary rounded-full glow-border" />
+            <span className="text-xs text-muted-foreground font-mono tracking-widest">CYBERLAB</span>
+          </div>
+          <h1 className="text-lg font-bold text-foreground tracking-tight">Cyber Toolkit</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">Herramientas de seguridad</p>
         </div>
-        <h1 className="text-3xl md:text-5xl font-black glow-text text-primary tracking-wider mb-2">
-          {title}
-          <span className="animate-pulse">|</span>
-        </h1>
-        {bootDone && (
-          <p className="text-muted-foreground text-sm font-mono">
-            {">> Herramientas de ciberseguridad y criptografía para uso educativo"}
+
+        {/* Nav */}
+        <nav className="flex-1 overflow-y-auto py-3 cyber-scrollbar">
+          {CATEGORIES.map(cat => {
+            const catTools = TOOLS.filter(t => t.category === cat);
+            if (!catTools.length) return null;
+            return (
+              <div key={cat} className="mb-4">
+                <div className="px-4 mb-1">
+                  <span className="text-[10px] font-mono text-muted-foreground tracking-widest">{cat}</span>
+                </div>
+                {catTools.map(tool => {
+                  const Icon = tool.icon;
+                  const isActive = activeTool === tool.id;
+                  return (
+                    <button
+                      key={tool.id}
+                      onClick={() => { setActiveTool(tool.id); setSidebarOpen(false); }}
+                      className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-all group ${
+                        isActive
+                          ? "bg-primary/10 border-r-2 border-primary text-primary"
+                          : "text-muted-foreground hover:bg-secondary hover:text-foreground border-r-2 border-transparent"
+                      }`}
+                    >
+                      <Icon className={`w-4 h-4 shrink-0 ${isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground"}`} />
+                      <div className="min-w-0">
+                        <div className="text-sm font-medium leading-tight truncate">{tool.label}</div>
+                        <div className="text-[10px] text-muted-foreground truncate mt-0.5">{tool.desc}</div>
+                      </div>
+                      {isActive && <ChevronRight className="w-3 h-3 ml-auto shrink-0" />}
+                    </button>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </nav>
+
+        {/* Footer */}
+        <div className="px-4 py-3 border-t border-border">
+          <p className="text-[10px] text-muted-foreground font-mono leading-relaxed">
+            Todo el procesamiento es local.<br />Ningún dato sale de tu navegador.
           </p>
-        )}
-        <div className="mt-4 h-px bg-gradient-to-r from-primary via-primary/30 to-transparent" />
-      </header>
-
-      {/* Tool grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
-        {TOOLS.map((tool) => {
-          const Icon = tool.icon;
-          const isActive = activeTool === tool.id;
-          return (
-            <button
-              key={tool.id}
-              onClick={() => setActiveTool(isActive ? null : tool.id)}
-              className={`terminal-card p-4 text-left transition-all duration-200 group border ${
-                isActive
-                  ? "border-primary glow-border-strong bg-primary/5"
-                  : "border-border hover:border-primary/50 hover:glow-border"
-              }`}
-            >
-              <div className="flex items-start justify-between mb-2">
-                <Icon className={`w-5 h-5 ${isActive ? "text-primary glow-text" : "text-muted-foreground group-hover:text-primary"} transition-colors`} />
-                <span className={`text-[10px] font-mono px-1.5 py-0.5 border ${isActive ? "border-primary text-primary" : "border-border text-muted-foreground"}`}>
-                  {tool.tag}
-                </span>
-              </div>
-              <div className={`text-sm font-bold tracking-wider mb-1 font-mono ${isActive ? "text-primary" : "text-foreground"}`}>
-                {tool.label}
-              </div>
-              <div className="text-xs text-muted-foreground leading-relaxed">{tool.desc}</div>
-              <div className={`flex items-center gap-1 mt-2 text-xs transition-all ${isActive ? "text-primary" : "text-muted-foreground opacity-0 group-hover:opacity-100"}`}>
-                <ChevronRight className="w-3 h-3" />
-                {isActive ? "ACTIVO" : "EJECUTAR"}
-              </div>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Active tool panel */}
-      {activeTool && active && (
-        <div className="terminal-card border border-primary/60 glow-border-strong">
-          {/* Panel header */}
-          <div className="border-b border-border px-4 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex gap-1.5">
-                <div className="w-2.5 h-2.5 rounded-full bg-destructive" />
-                <div className="w-2.5 h-2.5 rounded-full" style={{ background: "hsl(45 90% 55%)" }} />
-                <div className="w-2.5 h-2.5 rounded-full bg-primary" />
-              </div>
-              <span className="text-xs text-primary font-mono">
-                {"> "}{active.label}.exe
-              </span>
-            </div>
-            <button
-              onClick={() => setActiveTool(null)}
-              className="text-muted-foreground hover:text-primary text-xs font-mono"
-            >
-              [X] CERRAR
-            </button>
-          </div>
-
-          <div className="p-4">
-            {activeTool === "stego" && <StegoTool />}
-            {activeTool === "hash" && <HashTool />}
-            {activeTool === "cipher" && <CipherTool />}
-            {activeTool === "encoder" && <EncoderTool />}
-            {activeTool === "password" && <PasswordTool />}
-          </div>
         </div>
+      </aside>
+
+      {/* Sidebar overlay mobile */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 bg-background/80 z-40 md:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
-      {/* Footer */}
-      <footer className="mt-8 border-t border-border pt-4">
-        <div className="text-xs text-muted-foreground font-mono space-y-1">
-          <div>{"// Todo el procesamiento es LOCAL — ningún dato se envía a servidores"}</div>
-          <div>{"// Uso exclusivamente educativo e investigación en seguridad"}</div>
-        </div>
-      </footer>
+      {/* Main content */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        {/* Topbar */}
+        <header className="border-b border-border px-4 md:px-6 py-3 flex items-center gap-3 bg-card shrink-0">
+          <button
+            className="md:hidden text-muted-foreground hover:text-foreground"
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+          >
+            {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
+
+          <div className="flex items-center gap-2 min-w-0">
+            <ActiveIcon className="w-4 h-4 text-primary shrink-0" />
+            <span className="font-semibold text-foreground truncate">{active.label}</span>
+            <span className="hidden sm:inline text-xs px-1.5 py-0.5 border border-border text-muted-foreground font-mono shrink-0">
+              {active.category}
+            </span>
+          </div>
+
+          <div className="ml-auto flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
+              <div className="w-1.5 h-1.5 rounded-full bg-primary glow-border animate-pulse" />
+              <span className="text-xs text-muted-foreground font-mono hidden sm:inline">ONLINE</span>
+            </div>
+          </div>
+        </header>
+
+        {/* Tool panel */}
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 cyber-scrollbar">
+          <div className="max-w-2xl mx-auto">
+            <div className="mb-4">
+              <h2 className="text-base font-semibold text-foreground">{active.label}</h2>
+              <p className="text-xs text-muted-foreground font-mono mt-0.5">{active.desc}</p>
+            </div>
+            <div className="terminal-card p-4 md:p-5">
+              <ToolComponent id={activeTool} />
+            </div>
+          </div>
+        </main>
+      </div>
     </div>
   );
 }

@@ -4,7 +4,8 @@
 
 /* CYBER TOOLKIT — Terminal Hacker Design System */
 
-@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
 
 @layer base {
   :root {
@@ -37,7 +38,7 @@
     --destructive: 0 70% 50%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 120 40% 18%;
+    --border: 120 20% 14%;
     --input: 120 10% 8%;
     --ring: 120 100% 45%;
 
@@ -66,10 +67,10 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'Share Tech Mono', 'Courier New', monospace;
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
   }
 
-  /* Scanline effect overlay */
+  /* Subtle scanline */
   body::before {
     content: '';
     position: fixed;
@@ -77,20 +78,21 @@
     background: repeating-linear-gradient(
       0deg,
       transparent,
-      transparent 2px,
-      hsl(120 100% 45% / 0.015) 2px,
-      hsl(120 100% 45% / 0.015) 4px
+      transparent 3px,
+      hsl(120 100% 45% / 0.01) 3px,
+      hsl(120 100% 45% / 0.01) 4px
     );
     pointer-events: none;
     z-index: 9999;
   }
 
   h1, h2, h3 {
-    font-family: 'Orbitron', monospace;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
   }
 
   textarea, input {
-    font-family: 'Share Tech Mono', 'Courier New', monospace;
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
   }
 }
 
@@ -120,12 +122,3 @@
   }
 }
 
-@layer base {
-  * {
-    @apply border-border;
-  }
-
-  body {
-    @apply bg-background text-foreground;
-  }
-}
