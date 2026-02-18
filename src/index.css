@@ -120,5 +120,10 @@
   .cyber-scrollbar::-webkit-scrollbar-thumb {
     background: hsl(var(--primary));
   }
+  [contenteditable][data-placeholder]:empty::before {
+    content: attr(data-placeholder);
+    color: hsl(var(--muted-foreground));
+    pointer-events: none;
+  }
 }
 

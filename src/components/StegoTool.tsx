@@ -137,12 +137,38 @@ export function StegoTool() {
         <div className="space-y-3">
           <div>
             <label className="text-xs text-muted-foreground block mb-1">{">> PASTE SUSPICIOUS TEXT/EMOJIS:"}</label>
+            {/* Textarea oculto con el valor real (con ZWJ) */}
             <textarea
               value={stegoInput}
               onChange={e => setStegoInput(e.target.value)}
-              className="w-full bg-muted border border-border px-3 py-2 text-foreground text-sm focus:outline-none focus:border-primary transition-colors resize-none h-24"
-              placeholder="Pega aquí el texto sospechoso..."
+              className="w-full bg-muted border border-border px-3 py-2 text-foreground text-sm focus:outline-none focus:border-primary transition-colors resize-none h-24 opacity-0 absolute pointer-events-none"
+              aria-hidden
+              tabIndex={-1}
+              readOnly
             />
+            {/* Área visible que muestra el texto limpio (sin caracteres invisibles renderizados) */}
+            <div
+              contentEditable
+              suppressContentEditableWarning
+              onPaste={e => {
+                e.preventDefault();
+                const text = e.clipboardData.getData("text/plain");
+                setStegoInput(text);
+                // Mostrar versión visual limpia en el div
+                const el = e.currentTarget;
+                const visible = text.replace(/[\u200B\u200C\u200D]/g, "");
+                el.textContent = visible || "";
+              }}
+              onInput={() => {/* controlled via paste */}}
+              className="w-full bg-muted border border-border px-3 py-2 text-foreground text-sm focus:outline-none focus:border-primary transition-colors min-h-24 h-24 overflow-auto outline-none cyber-scrollbar"
+              data-placeholder="Pega aquí el texto sospechoso..."
+              style={{ whiteSpace: "pre-wrap" }}
+            />
+            {stegoInput && (
+              <div className="text-xs text-muted-foreground mt-1">
+                {stegoInput.length} chars totales · {[...stegoInput].filter(c => c === "\u200C" || c === "\u200D" || c === "\u200B").length} invisibles detectados
+              </div>
+            )}
           </div>
           <button
             onClick={handleReveal}
@@ -152,8 +178,8 @@ export function StegoTool() {
           </button>
           {revealResult && (
             <div className="border border-primary/40 bg-muted p-3">
-              <span className="text-xs text-primary">DECRYPTED: </span>
-              <span className="text-foreground text-sm">{revealResult}</span>
+              <div className="text-xs text-primary mb-1">DECRYPTED</div>
+              <div className="text-foreground text-sm">{revealResult}</div>
             </div>
           )}
         </div>
