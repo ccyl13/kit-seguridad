@@ -11,49 +11,43 @@ import { PasswordTool } from "@/components/PasswordTool";
 import { JwtTool } from "@/components/JwtTool";
 import { RegexTool } from "@/components/RegexTool";
 import { NetworkTool } from "@/components/NetworkTool";
+import { LanguageProvider, useLanguage } from "@/contexts/LanguageContext";
 
 type ToolId = "stego" | "hash" | "cipher" | "encoder" | "password" | "jwt" | "regex" | "network";
 
-interface Tool {
-  id: ToolId;
-  label: string;
-  icon: React.ElementType;
-  desc: string;
-  category: string;
-}
-
-const TOOLS: Tool[] = [
-  { id: "jwt", label: "Inspector JWT", icon: Key, desc: "Decodifica y analiza tokens JWT", category: "AUTH" },
-  { id: "hash", label: "Generador de Hash", icon: Hash, desc: "SHA-256, SHA-1, CRC-32 + entropía", category: "CRIPTO" },
-  { id: "cipher", label: "Cifrado Clásico", icon: Lock, desc: "César, ROT13, Vigenère", category: "CRIPTO" },
-  { id: "encoder", label: "Codificador", icon: Code2, desc: "Base64, URL, HEX, Binario", category: "CODIFICACIÓN" },
-  { id: "regex", label: "Laboratorio Regex", icon: Regex, desc: "Prueba expresiones regulares con resaltado", category: "ANÁLISIS" },
-  { id: "network", label: "IP / Subredes", icon: Network, desc: "Calculadora CIDR y análisis de red", category: "RED" },
-  { id: "stego", label: "Esteganografía", icon: Terminal, desc: "Oculta datos en emojis con ZWJ", category: "STEGO" },
-  { id: "password", label: "Contraseñas", icon: Shield, desc: "Analizador de fortaleza y generador", category: "OPSEC" },
+const TOOL_IDS: { id: ToolId; icon: React.ElementType; category: string }[] = [
+  { id: "jwt",      icon: Key,      category: "AUTH" },
+  { id: "hash",     icon: Hash,     category: "CRIPTO" },
+  { id: "cipher",   icon: Lock,     category: "CRIPTO" },
+  { id: "encoder",  icon: Code2,    category: "CODIFICACIÓN" },
+  { id: "regex",    icon: Regex,    category: "ANÁLISIS" },
+  { id: "network",  icon: Network,  category: "RED" },
+  { id: "stego",    icon: Terminal, category: "STEGO" },
+  { id: "password", icon: Shield,   category: "OPSEC" },
 ];
 
 const CATEGORIES = ["AUTH", "CRIPTO", "CODIFICACIÓN", "ANÁLISIS", "RED", "STEGO", "OPSEC"];
 
 function ToolComponent({ id }: { id: ToolId }) {
   switch (id) {
-    case "stego": return <StegoTool />;
-    case "hash": return <HashTool />;
-    case "cipher": return <CipherTool />;
-    case "encoder": return <EncoderTool />;
+    case "stego":    return <StegoTool />;
+    case "hash":     return <HashTool />;
+    case "cipher":   return <CipherTool />;
+    case "encoder":  return <EncoderTool />;
     case "password": return <PasswordTool />;
-    case "jwt": return <JwtTool />;
-    case "regex": return <RegexTool />;
-    case "network": return <NetworkTool />;
+    case "jwt":      return <JwtTool />;
+    case "regex":    return <RegexTool />;
+    case "network":  return <NetworkTool />;
   }
 }
 
-export default function Index() {
+function AppLayout() {
+  const { t, lang, setLang } = useLanguage();
   const [activeTool, setActiveTool] = useState<ToolId>("jwt");
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const active = TOOLS.find(t => t.id === activeTool)!;
-  const ActiveIcon = active.icon;
+  const activeMeta = TOOL_IDS.find(t => t.id === activeTool)!;
+  const ActiveIcon = activeMeta.icon;
 
   return (
     <div className="flex h-screen bg-background text-foreground overflow-hidden">
@@ -70,19 +64,21 @@ export default function Index() {
             <img src="/logo.svg" alt="CyberLab logo" className="w-7 h-7" />
             <span className="text-xs font-semibold text-muted-foreground tracking-widest uppercase">CyberLab</span>
           </div>
-          <h1 className="text-base font-semibold text-foreground leading-tight">Kit de Seguridad</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">Herramientas de análisis</p>
+          <h1 className="text-base font-semibold text-foreground leading-tight">{t("app.title")}</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">{t("app.subtitle")}</p>
         </div>
 
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto py-3 cyber-scrollbar">
           {CATEGORIES.map(cat => {
-            const catTools = TOOLS.filter(t => t.category === cat);
+            const catTools = TOOL_IDS.filter(tool => tool.category === cat);
             if (!catTools.length) return null;
             return (
               <div key={cat} className="mb-5">
                 <div className="px-4 mb-1.5">
-                  <span className="text-[10px] font-semibold text-muted-foreground/60 tracking-widest uppercase">{cat}</span>
+                  <span className="text-[10px] font-semibold text-muted-foreground/60 tracking-widest uppercase">
+                    {t(`cat.${cat}`)}
+                  </span>
                 </div>
                 {catTools.map(tool => {
                   const Icon = tool.icon;
@@ -99,8 +95,12 @@ export default function Index() {
                     >
                       <Icon className={`w-4 h-4 shrink-0 ${isActive ? "text-primary" : "text-muted-foreground/60 group-hover:text-muted-foreground"}`} />
                       <div className="min-w-0">
-                        <div className={`text-sm leading-tight truncate ${isActive ? "font-medium text-foreground" : "font-normal"}`}>{tool.label}</div>
-                        <div className="text-[10px] text-muted-foreground/60 truncate mt-0.5 font-mono">{tool.desc}</div>
+                        <div className={`text-sm leading-tight truncate ${isActive ? "font-medium text-foreground" : "font-normal"}`}>
+                          {t(`tool.${tool.id}.name`)}
+                        </div>
+                        <div className="text-[10px] text-muted-foreground/60 truncate mt-0.5 font-mono">
+                          {t(`tool.${tool.id}.desc`)}
+                        </div>
                       </div>
                     </button>
                   );
@@ -114,11 +114,9 @@ export default function Index() {
         <div className="px-5 py-4 border-t border-border">
           <div className="flex items-center gap-1.5 mb-1">
             <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-            <span className="text-[10px] font-semibold text-primary uppercase tracking-widest">100% Local</span>
+            <span className="text-[10px] font-semibold text-primary uppercase tracking-widest">{t("app.privacy.badge")}</span>
           </div>
-          <p className="text-[10px] text-muted-foreground/60 leading-relaxed">
-            Todo el procesamiento ocurre en tu navegador. Ningún dato se envía a servidores.
-          </p>
+          <p className="text-[10px] text-muted-foreground/60 leading-relaxed">{t("app.privacy")}</p>
         </div>
       </aside>
 
@@ -142,18 +140,38 @@ export default function Index() {
             <div className="w-7 h-7 rounded bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
               <ActiveIcon className="w-3.5 h-3.5 text-primary" />
             </div>
-            <div className="min-w-0">
-              <span className="font-semibold text-foreground text-sm truncate block">{active.label}</span>
-            </div>
+            <span className="font-semibold text-foreground text-sm truncate">{t(`tool.${activeTool}.name`)}</span>
             <span className="hidden sm:inline text-[10px] px-2 py-0.5 rounded-full bg-secondary text-muted-foreground font-semibold uppercase tracking-wider shrink-0">
-              {active.category}
+              {t(`cat.${activeMeta.category}`)}
             </span>
           </div>
 
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex items-center gap-3">
+            {/* Language toggle */}
+            <div className="flex items-center border border-border rounded overflow-hidden">
+              <button
+                onClick={() => setLang("es")}
+                className={`px-2.5 py-1 text-[11px] font-semibold tracking-wider transition-all ${
+                  lang === "es" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                ES
+              </button>
+              <button
+                onClick={() => setLang("en")}
+                className={`px-2.5 py-1 text-[11px] font-semibold tracking-wider transition-all ${
+                  lang === "en" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                EN
+              </button>
+            </div>
+
             <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-secondary border border-border">
               <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-              <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider hidden sm:inline">Local</span>
+              <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider hidden sm:inline">
+                {t("status.local")}
+              </span>
             </div>
           </div>
         </header>
@@ -161,16 +179,24 @@ export default function Index() {
         {/* Tool panel */}
         <main className="flex-1 overflow-y-auto p-4 md:p-8 cyber-scrollbar bg-background">
           <div className="max-w-2xl mx-auto">
-            <div className="mb-5 animate-fade-in" key={activeTool + "-header"}>
-              <h2 className="text-lg font-semibold text-foreground">{active.label}</h2>
-              <p className="text-sm text-muted-foreground mt-0.5">{active.desc}</p>
+            <div className="mb-5 animate-fade-in" key={activeTool + "-header-" + lang}>
+              <h2 className="text-lg font-semibold text-foreground">{t(`tool.${activeTool}.name`)}</h2>
+              <p className="text-sm text-muted-foreground mt-0.5">{t(`tool.${activeTool}.desc`)}</p>
             </div>
-            <div className="bg-card border border-border rounded-lg p-5 md:p-6 animate-fade-in shadow-sm" key={activeTool}>
+            <div className="bg-card border border-border rounded-lg p-5 md:p-6 animate-fade-in shadow-sm" key={activeTool + lang}>
               <ToolComponent id={activeTool} />
             </div>
           </div>
         </main>
       </div>
     </div>
+  );
+}
+
+export default function Index() {
+  return (
+    <LanguageProvider>
+      <AppLayout />
+    </LanguageProvider>
   );
 }
