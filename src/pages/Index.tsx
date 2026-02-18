@@ -66,10 +66,8 @@ export default function Index() {
       `}>
         {/* Logo */}
         <div className="px-5 py-5 border-b border-border">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-6 h-6 bg-primary rounded flex items-center justify-center">
-              <Shield className="w-3.5 h-3.5 text-primary-foreground" />
-            </div>
+          <div className="flex items-center gap-2.5 mb-2">
+            <img src="/favicon.png" alt="CyberLab logo" className="w-7 h-7 rounded object-cover" />
             <span className="text-xs font-semibold text-muted-foreground tracking-widest uppercase">CyberLab</span>
           </div>
           <h1 className="text-base font-semibold text-foreground leading-tight">Security Toolkit</h1>
