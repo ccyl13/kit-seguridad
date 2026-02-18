@@ -114,13 +114,22 @@ export function StegoTool() {
           {result && (
             <div className="border border-primary/40 bg-muted p-3">
               <div className="flex justify-between items-center mb-2">
-                <span className="text-xs text-primary">{"// OUTPUT (apariencia normal, payload oculto):"}</span>
+                <span className="text-xs text-primary">{"// OUTPUT (listo para copiar y pegar):"}</span>
                 <button onClick={() => copyToClipboard(result)} className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1">
                   {copied ? <><CheckCheck className="w-3 h-3" /> COPIADO</> : <><Copy className="w-3 h-3" /> COPIAR</>}
                 </button>
               </div>
-              <div className="text-2xl">{result}</div>
-              <div className="text-xs text-muted-foreground mt-2">⚠ El texto parece normal pero contiene {secretText.length * 8} bits ocultos</div>
+              {/* Solo mostrar el cover text — los ZWJ/ZWNJ son invisibles pero están en el clipboard */}
+              <div className="flex items-center gap-3">
+                <div className="text-3xl">{coverText}</div>
+                <div className="text-xs text-muted-foreground">
+                  <span className="block">← Apariencia visible para otros</span>
+                  <span className="block text-primary">{secretText.length * 8} bits ocultos incrustados</span>
+                </div>
+              </div>
+              <div className="mt-3 pt-2 border-t border-border/50 text-xs text-muted-foreground">
+                ✓ Pulsa COPIAR — el texto copiado lleva el payload invisible dentro
+              </div>
             </div>
           )}
         </div>
