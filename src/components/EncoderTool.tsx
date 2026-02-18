@@ -84,13 +84,13 @@ export function EncoderTool() {
                 : "border-border text-muted-foreground hover:border-primary/50"
             }`}
           >
-            {d === "encode" ? "📥 ENCODE" : "📤 DECODE"}
+            {d === "encode" ? "📥 CODIFICAR" : "📤 DECODIFICAR"}
           </button>
         ))}
       </div>
 
       <div>
-        <label className="text-xs text-muted-foreground block mb-1">{">> INPUT:"}</label>
+        <label className="text-xs text-muted-foreground block mb-1">{">> ENTRADA:"}</label>
         <textarea
           value={input}
           onChange={e => setInput(e.target.value)}
@@ -104,7 +104,7 @@ export function EncoderTool() {
         disabled={!input}
         className="w-full py-2 bg-primary text-primary-foreground text-sm font-bold tracking-widest hover:opacity-90 transition-opacity disabled:opacity-50 glow-border-strong"
       >
-        {direction === "encode" ? "ENCODE" : "DECODE"} {">>"}
+        {direction === "encode" ? "CODIFICAR" : "DECODIFICAR"} {">>"}
       </button>
 
       {output && (
@@ -113,10 +113,10 @@ export function EncoderTool() {
             <span className="text-xs text-primary">// OUTPUT:</span>
             <div className="flex gap-2">
               <button onClick={swap} className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1">
-                <ArrowRightLeft className="w-3 h-3" /> SWAP
+                <ArrowRightLeft className="w-3 h-3" /> INTERCAMBIAR
               </button>
               <button onClick={copy} className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1">
-                {copied ? <><CheckCheck className="w-3 h-3" /> OK</> : <><Copy className="w-3 h-3" /> COPY</>}
+                {copied ? <><CheckCheck className="w-3 h-3" /> OK</> : <><Copy className="w-3 h-3" /> COPIAR</>}
               </button>
             </div>
           </div>

@@ -194,7 +194,7 @@ export function PasswordTool() {
 
               {strength.issues.length > 0 && (
                 <div className="border border-border bg-muted p-3 space-y-1">
-                  <div className="text-xs text-primary mb-2">// WARNINGS:</div>
+                  <div className="text-xs text-primary mb-2">// ADVERTENCIAS:</div>
                   {strength.issues.map((issue, i) => (
                     <div key={i} className="text-xs text-muted-foreground">
                       <span className="text-destructive">▶</span> {issue}
@@ -217,7 +217,7 @@ export function PasswordTool() {
                   genMode === m ? "bg-primary/20 text-primary border-b border-primary" : "text-muted-foreground hover:bg-secondary"
                 }`}
               >
-                {m === "random" ? "ALEATORIA" : "PASSPHRASE"}
+                {m === "random" ? "ALEATORIA" : "FRASE CLAVE"}
               </button>
             ))}
           </div>
@@ -264,9 +264,9 @@ export function PasswordTool() {
               {generated && (
                 <div className="border border-primary/40 bg-muted p-3 animate-fade-in">
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-xs text-primary">// GENERATED_PASSWORD:</span>
+                    <span className="text-xs text-primary">// CONTRASEÑA GENERADA:</span>
                     <button onClick={() => copy(generated, "Contraseña")} className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1">
-                      <Copy className="w-3 h-3" /> COPY
+                      <Copy className="w-3 h-3" /> COPIAR
                     </button>
                   </div>
                   <div className="text-sm text-foreground break-all font-mono">{generated}</div>
@@ -288,14 +288,14 @@ export function PasswordTool() {
                 onClick={genPhrase}
                 className="w-full py-2 bg-primary text-primary-foreground text-sm font-bold tracking-widest hover:opacity-90 transition-opacity glow-border-strong flex items-center justify-center gap-2"
               >
-                <RefreshCw className="w-4 h-4" /> GENERAR PASSPHRASE
+                <RefreshCw className="w-4 h-4" /> GENERAR FRASE CLAVE
               </button>
               {passphrase && (
                 <div className="border border-primary/40 bg-muted p-3 animate-fade-in">
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-xs text-primary">// PASSPHRASE:</span>
+                    <span className="text-xs text-primary">// FRASE DE CONTRASEÑA:</span>
                     <button onClick={() => copy(passphrase, "Passphrase")} className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1">
-                      <Copy className="w-3 h-3" /> COPY
+                      <Copy className="w-3 h-3" /> COPIAR
                     </button>
                   </div>
                   <div className="text-lg text-foreground font-mono tracking-wide">{passphrase}</div>

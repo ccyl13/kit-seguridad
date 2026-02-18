@@ -181,7 +181,7 @@ export function StegoTool() {
               : "bg-muted text-muted-foreground hover:bg-secondary"
           }`}
         >
-          <EyeOff className="w-4 h-4" /> HIDE_PAYLOAD
+          <EyeOff className="w-4 h-4" /> OCULTAR DATOS
         </button>
         <button
           onClick={() => setMode("reveal")}
@@ -191,7 +191,7 @@ export function StegoTool() {
               : "bg-muted text-muted-foreground hover:bg-secondary"
           }`}
         >
-          <Eye className="w-4 h-4" /> EXTRACT_PAYLOAD
+          <Eye className="w-4 h-4" /> EXTRAER DATOS
         </button>
       </div>
 
@@ -223,12 +223,12 @@ export function StegoTool() {
             onClick={handleHide}
             className="w-full py-2 bg-primary text-primary-foreground text-sm font-bold tracking-widest hover:opacity-90 transition-opacity glow-border-strong"
           >
-            INJECT {">>"}
+            INYECTAR {">>"}
           </button>
           {result && (
             <div className="border border-primary/40 bg-muted p-3">
               <div className="flex justify-between items-center mb-2">
-                <span className="text-xs text-primary">{"// OUTPUT (listo para copiar y pegar):"}</span>
+                <span className="text-xs text-primary">{"// RESULTADO (listo para copiar y pegar):"}</span>
                 <button onClick={() => copyToClipboard(result)} className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1">
                   {copied ? <><CheckCheck className="w-3 h-3" /> COPIADO</> : <><Copy className="w-3 h-3" /> COPIAR</>}
                 </button>
@@ -249,7 +249,7 @@ export function StegoTool() {
       ) : (
         <div className="space-y-3">
           <div>
-            <label className="text-xs text-muted-foreground block mb-1">{">> PASTE SUSPICIOUS TEXT/EMOJIS:"}</label>
+            <label className="text-xs text-muted-foreground block mb-1">{">> PEGA EL TEXTO SOSPECHOSO:"}</label>
             <textarea
               value={displayInput}
               onChange={e => setDisplayInput(e.target.value)}
@@ -273,11 +273,11 @@ export function StegoTool() {
             disabled={!stegoInput}
             className="w-full py-2 bg-primary text-primary-foreground text-sm font-bold tracking-widest hover:opacity-90 transition-opacity disabled:opacity-50 glow-border-strong"
           >
-            ANALYZE & EXTRACT {">>"}
+            ANALIZAR Y EXTRAER {">>"}
           </button>
           {revealResult && (
             <div className="border border-primary/40 bg-muted p-3">
-              <div className="text-xs text-primary mb-1">DECRYPTED</div>
+              <div className="text-xs text-primary mb-1">DESCIFRADO</div>
               <div className="text-foreground text-sm">{revealResult}</div>
             </div>
           )}
