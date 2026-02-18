@@ -61,7 +61,7 @@ function AppLayout() {
         {/* Logo */}
         <div className="px-5 py-5 border-b border-border">
           <div className="flex items-center gap-2.5 mb-2">
-            <img src="/logo.svg" alt="CyberLab logo" className="w-7 h-7" />
+            <img src={`${import.meta.env.BASE_URL}logo.svg`} alt="CyberLab logo" className="w-7 h-7" />
             <span className="text-xs font-semibold text-muted-foreground tracking-widest uppercase">CyberLab</span>
           </div>
           <h1 className="text-base font-semibold text-foreground leading-tight">{t("app.title")}</h1>
